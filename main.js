@@ -1,19 +1,15 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js';
-import { getFirestore, collection, addDoc } from 'https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js';
+const { useRef, useState, useEffect } = React;
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBZieSNvs_E3GQHfQ4bR7exiA_b-RxN-BQ",
-  authDomain: "my-clinical-forms.firebaseapp.com",
-  projectId: "my-clinical-forms",
-  storageBucket: "my-clinical-forms.firebasestorage.app",
-  messagingSenderId: "479710055961",
-  appId: "1:479710055961:web:52806a0fa038537a66a488"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 const appId = firebaseConfig.appId;
-
-const { useRef, useState, useEffect } = React;
 
 const App = () => {
   const [formData, setFormData] = useState({
@@ -43,13 +39,13 @@ const App = () => {
       return;
     }
 
-    const app = initializeApp(firebaseConfig);
-    const authInstance = getAuth(app);
-    const dbInstance = getFirestore(app);
+    const app = firebase.initializeApp(firebaseConfig);
+    const authInstance = firebase.auth();
+    const dbInstance = firebase.firestore();
     setAuth(authInstance);
     setDb(dbInstance);
 
-    const unsubscribe = onAuthStateChanged(authInstance, (user) => {
+    const unsubscribe = authInstance.onAuthStateChanged((user) => {
       if (user) {
         setUserId(user.uid);
       } else {
@@ -59,7 +55,7 @@ const App = () => {
 
     const authenticate = async () => {
       try {
-        await signInAnonymously(authInstance);
+        await authInstance.signInAnonymously();
       } catch (error) {
         console.error("Firebase authentication failed:", error);
         setStatusMessage("Authentication failed. Data saving is not possible.");
@@ -164,8 +160,8 @@ const App = () => {
         }
       });
       const completeRecord = { ...formData, ...drawingData, timestamp: new Date().toISOString(), };
-      const formsCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'forms');
-      await addDoc(formsCollectionRef, completeRecord);
+      const formsCollectionRef = db.collection('artifacts').doc(appId).collection('users').doc(userId).collection('forms');
+      await formsCollectionRef.add(completeRecord);
       setStatusMessage("Form successfully saved! ✅");
     } catch (error) {
       console.error("Error saving document: ", error);
